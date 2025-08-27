@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8" />
+  <title>Στατιστικά Αγώνα</title>
+    <style>
+   body {
+  background-color: #121212;   /* σκοτεινό όπως scoreboard */
+  color: #ffffff;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  margin: 0;
+  padding: 20px;
+}
+
+.stats-container {
+  max-width: 900px;
+  margin: auto;
+}
+
+h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  font-weight: bold;
+  font-size: 1.6em;
+  color: #05ee10;   /* ίδιο πράσινο με κουμπιά */
+  letter-spacing: 1px;
+}
+
+.stat-row {
+  margin-bottom: 26px;
+}
+
+.stat-label {
+  text-align: center;
+  font-weight: bold;
+  margin-bottom: 6px;
+  color: #e0e0e0;
+  font-size: 15px;
+}
+
+.bar-wrapper {
+  display: grid;
+  grid-template-columns: 80px 1fr 80px;
+  align-items: center;
+  gap: 8px;
+}
+
+.stat-value {
+  font-size: 0.95rem;
+  font-weight: bold;
+  text-align: center;
+  color: #ffffff;
+}
+
+.bar {
+  position: relative;
+  height: 22px;
+  background: #242424;        /* σκούρο φόντο όπως set-history */
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+}
+
+.bar-fill-left {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: #4b0082;        /* μοβ ίδιο με set-score */
+  border-radius: 12px 0 0 12px;
+}
+
+.bar-fill-right {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background: #006400;        /* πράσινο ίδιο με κουμπιά */
+  border-radius: 0 12px 12px 0;
+}
+
+.btn-reset {
+  display: block;
+  margin: 20px auto;
+  padding: 10px 20px;
+  background: #e91e63;
+  color: #fff;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s, transform 0.2s;
+}
+
+.btn-reset:hover {
+  background: #c2185b;
+  transform: scale(1.05);
+}
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 15px;
+  color: #05ee10;   /* πράσινο όπως τα υπόλοιπα */
+  text-decoration: none;
+  font-weight: bold;
+  transition: color 0.2s;
+}
+
+.back-link:hover {
+  color: #e91e63;
+}
+
+  </style>
+</head>
+<body>
+
+  <a href="scoretrack.html" class="back-link">← Πίσω</a>
+
+  <div class="stats-container">
+    <h2>Στατιστικά Αγώνα</h2>
+    <div id="stats-body"></div>
+    <button class="btn-reset" onclick="resetStats()">Μηδενισμός Στατιστικών</button>
+  </div>
+
+<script>
+  // Κατηγορίες στατιστικών
+  const statsCategories = [
+    { key: "Άσοι", label: "Aces" },
+    { key: "Νταμπλ φολτ", label: "Double Faults" },
+    { key: "Νικητές", label: "Winners" },
+    { key: "Ατομικά λάθη", label: "Unforced Errors" },
+    { key: "Ποσοστό 1ου σερβίς", label: "1st Serve Percentage", percent:true },
+    { key: "Return Winners", label: "Return Winners", complex:true },
+    { key: "Return Errors", label: "Return Errors", complex:true },
+    { key: "Πόντοι με σερβίς", label: "Service Points" },
+    { key: "Πόντοι χωρίς σερβίς", label: "Points Without Service" },
+    { key: 'Λάθη υπό πίεση', label: "Forced Errors" },
+    { key: 'Κερδισμένοι Πόντοι', label: 'Points Won' },
+    { key: "Πόντοι 1ου σερβίς", label: "1st Serve Points Won", complex:true },
+    { key: "Πόντοι 2ου σερβίς", label: "2nd Serve Points Won", complex:true },
+    { key: "Σωσμένα μπρέικ πόιντ", label: "Break Points Saved", complex:true },
+  ];
+  
+
+  // Διάβασμα από localStorage
+  function getStats() {
+    return {
+      player1: JSON.parse(localStorage.getItem("statsPlayer1")) || {},
+      player2: JSON.parse(localStorage.getItem("statsPlayer2")) || {}
+    };
+  }
+
+  function formatValue(value) {
+    if (!value) return "0";
+    if (typeof value === "object") {
+      return `${value.percent || 0}% (${value.won||0}/${value.total||0})`;
+    }
+    return value;
+  }
+
+  function extractPercent(value) {
+    if (!value) return 0;
+    if (typeof value === "object") return value.percent || 0;
+    if (typeof value === "number") return value;
+    if (typeof value === "string" && value.includes("%")) {
+      return parseInt(value);
+    }
+    return 0;
+  }
+
+  // Υπολογισμός συγκριτικών μπαρών
+  function calcSplitBars(val1, val2) {
+    const total = (val1 || 0) + (val2 || 0);
+    if (total === 0) return { p1pct: 50, p2pct: 50 }; // ισομοιρασμένο
+    return {
+      p1pct: Math.round((val1 / total) * 100),
+      p2pct: Math.round((val2 / total) * 100)
+    };
+  }
+
+  function renderStats() {
+  const { player1, player2 } = getStats();
+  const container = document.getElementById("stats-body");
+  container.innerHTML = "";
+
+  statsCategories.forEach(stat => {
+    let p1Text, p2Text;
+    let barP1pct, barP2pct;
+
+    if (stat.key === "Κερδισμένοι Πόντοι") {
+  const p1Points = player1["Κερδισμένοι Πόντοι"] || 0;
+  const p2Points = player2["Κερδισμένοι Πόντοι"] || 0;
+  const totalPoints = p1Points + p2Points;
+
+  const p1pct = totalPoints ? Math.round((p1Points / totalPoints) * 100) : 50; // αν 0/0 -> 50%
+  const p2pct = totalPoints ? Math.round((p2Points / totalPoints) * 100) : 50; // αν 0/0 -> 50%
+
+  p1Text = `${p1Points}/${totalPoints} (${p1pct}%)`;
+  p2Text = `${p2Points}/${totalPoints} (${p2pct}%)`;
+
+  barP1pct = p1pct;
+  barP2pct = p2pct;
+}
+ else {
+      // Κανονική συμπεριφορά για τα υπόλοιπα στατιστικά
+      const p1val = extractPercent(player1[stat.key]);
+      const p2val = extractPercent(player2[stat.key]);
+
+      p1Text = formatValue(player1[stat.key]);
+      p2Text = formatValue(player2[stat.key]);
+
+      const { p1pct, p2pct } = calcSplitBars(p1val, p2val);
+      barP1pct = p1pct;
+      barP2pct = p2pct;
+    }
+
+    const row = document.createElement("div");
+    row.className = "stat-row";
+
+    const label = document.createElement("div");
+    label.className = "stat-label";
+    label.textContent = stat.label;
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "bar-wrapper";
+
+    const leftValue = document.createElement("div");
+    leftValue.className = "stat-value";
+    leftValue.textContent = p1Text;
+
+    const bar = document.createElement("div");
+    bar.className = "bar";
+
+    const fillLeft = document.createElement("div");
+    fillLeft.className = "bar-fill-left";
+    fillLeft.style.width = barP1pct + "%";
+
+    const fillRight = document.createElement("div");
+    fillRight.className = "bar-fill-right";
+    fillRight.style.width = barP2pct + "%";
+
+    bar.appendChild(fillLeft);
+    bar.appendChild(fillRight);
+
+    const rightValue = document.createElement("div");
+    rightValue.className = "stat-value";
+    rightValue.textContent = p2Text;
+
+    wrapper.appendChild(leftValue);
+    wrapper.appendChild(bar);
+    wrapper.appendChild(rightValue);
+
+    row.appendChild(label);
+    row.appendChild(wrapper);
+    container.appendChild(row);
+  });
+}
+
+
+  function resetStats() {
+    localStorage.setItem("statsPlayer1", JSON.stringify({}));
+    localStorage.setItem("statsPlayer2", JSON.stringify({}));
+    renderStats();
+  }
+
+  renderStats();
+</script>
+
+
+</body>
+</html>

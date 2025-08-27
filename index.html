@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8">
+  <title>Live Match Tracking</title>
+  <style>
+    body {
+      font-family: 'Open Sans', sans-serif;
+      background-color: #1a1a1a;
+      color: white;
+      padding: 30px;
+      text-align: center;
+      position: relative;
+      min-height: 100vh;
+    }
+
+    h1 {
+      font-size: 2rem;
+      color: #ffc371;
+    }
+
+    p {
+      font-size: 1.1rem;
+      margin-top: 20px;
+    }
+
+    .back-button {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background-color: #ffc371;
+      color: #1a1a1a;
+      border: none;
+      border-radius: 20px;
+      padding: 10px 20px;
+      font-size: 1rem;
+      font-weight: 600;
+      box-shadow: 0 4px 8px rgba(255, 195, 113, 0.5);
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: background-color 0.3s ease, box-shadow 0.3s ease;
+      z-index: 1000;
+    }
+
+    .back-button:hover {
+      background-color: #e6b24d;
+      box-shadow: 0 6px 12px rgba(230, 178, 77, 0.7);
+    }
+
+    .menu-bar {
+      background-color: #2c2c2c;
+      border-radius: 20px;
+      padding: 20px 40px;
+      margin: 80px auto 40px;
+      max-width: 900px;
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      flex-wrap: wrap;
+    }
+
+    .menu-button {
+      background-color: #ffc371;
+      color: #1a1a1a;
+      border: none;
+      border-radius: 20px;
+      padding: 14px 28px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.3s ease, box-shadow 0.3s ease;
+      box-shadow: 0 4px 8px rgba(255, 195, 113, 0.4);
+      min-width: 180px;
+    }
+
+    .menu-button:hover {
+      background-color: #e6b24d;
+      box-shadow: 0 6px 12px rgba(230, 178, 77, 0.6);
+    }
+
+    #athletes-section {
+      margin-top: 40px;
+      display: flex;
+      gap: 40px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    #athletes-list {
+      flex: 1;
+      max-width: 400px;
+      background-color: #2c2c2c;
+      border-radius: 20px;
+      padding: 20px;
+      overflow-y: auto;
+      max-height: 400px;
+      text-align: left;
+    }
+
+    #athletes-list ul {
+      list-style: none;
+      padding-left: 0;
+      margin: 0;
+    }
+
+    #athletes-list li {
+      padding: 8px;
+      border-bottom: 1px solid #444;
+      font-size: 1rem;
+      cursor: default;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    #athleteForm {
+      flex: 1;
+      max-width: 500px;
+      background-color: #2c2c2c;
+      border-radius: 10px;
+      padding: 20px;
+      text-align: left;
+    }
+
+    #athleteForm input, 
+    #athleteForm select {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border-radius: 10px;
+      border: none;
+      font-size: 1rem;
+      box-sizing: border-box;
+    }
+
+    #athleteForm button {
+      background-color: #ffc371;
+      color: #1a1a1a;
+      border: none;
+      border-radius: 20px;
+      padding: 14px 28px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.3s ease, box-shadow 0.3s ease;
+      box-shadow: 0 4px 8px rgba(255, 195, 113, 0.4);
+      width: 100%;
+    }
+
+    #athleteForm button:hover {
+      background-color: #e6b24d;
+      box-shadow: 0 6px 12px rgba(230, 178, 77, 0.6);
+    }
+
+    #playersDisplay button {
+      background: transparent;
+      border: none;
+      font-size: 1.2rem;
+      color: #ffc371;
+      transition: color 0.3s ease;
+    }
+
+    #playersDisplay button:hover {
+      color: #e6b24d;
+    }
+
+    .notification {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-100%);
+      background-color: #4caf50;
+      color: white;
+      padding: 15px 30px;
+      border-radius: 30px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      font-weight: 700;
+      font-size: 1.1rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s ease, transform 0.4s ease;
+      z-index: 9999;
+      max-width: 90%;
+      text-align: center;
+    }
+
+    .notification.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .notification.error {
+      background-color: #f44336;
+    }
+
+    .notification.info {
+      background-color: #2196f3;
+    }
+
+    #confirmModal {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: rgba(0,0,0,0.7);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+    }
+
+    #confirmModal .modal-content {
+      background-color: #2c2c2c;
+      padding: 30px 40px;
+      border-radius: 20px;
+      text-align: center;
+      max-width: 90%;
+      box-shadow: 0 4px 16px rgba(255,195,113,0.6);
+      color: white;
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+
+    #confirmModal .modal-buttons {
+      margin-top: 20px;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+    }
+
+    #confirmModal .modal-buttons button {
+      min-width: 120px;
+    }
+
+    #playersDisplay button.edit-btn {
+      background-color: #444546 !important;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 6px 10px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background-color 0.3s ease;
+    }
+    #playersDisplay button.edit-btn:hover {
+      background-color: #7c7e80 !important;
+    }
+
+    #playersDisplay button.delete-btn {
+      background-color: #91140c !important;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 6px 10px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background-color 0.3s ease;
+    }
+    #playersDisplay button.delete-btn:hover {
+      background-color: #ff0000 !important;
+    }
+
+    #playersDisplay button.stats-btn {
+      background-color: #d3830b !important;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 6px 10px;
+      cursor: pointer;
+      font-size: 1rem;
+      margin-right: 5px;
+      transition: background-color 0.3s ease;
+    }
+    #playersDisplay button.stats-btn:hover {
+      background-color: #fffb01 !important;
+    }
+
+    #savedMatchesSection {
+      margin-top: 40px;
+      display: none;
+      text-align: left;
+      max-width: 900px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .match-delete-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: #91140c;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 5px 10px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: background-color 0.3s ease;
+    }
+    .match-delete-btn:hover {
+      background-color: #ff0000;
+    }
+    .match-box {
+      position: relative;
+    }
+
+    #playersDisplay img {
+      width: 40px;
+      height: 40px;
+      object-fit: cover;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎾 Live Match Tracking</h1>
+
+  <div id="confirmModal" style="display:none;">
+    <div class="modal-content">
+      <p>Είστε σίγουροι πως θέλετε να διαγράψετε τον αθλητή;</p>
+      <div class="modal-buttons">
+        <button id="confirmYes" class="menu-button">ΝΑΙ</button>
+        <button id="confirmNo" class="menu-button" style="background-color: #f44336; color: white;">ΑΚΥΡΩΣΗ</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="menu-bar">
+    <button class="menu-button" onclick="window.location.href='pregame.html'">🎾 Νέος Αγώνας</button>
+    <button class="menu-button" onclick="loadSavedMatches()">📋 Προηγούμενα Αποτελέσματα</button>
+    <button class="menu-button" onclick="toggleAthletesSection()">👥 Αθλητές</button>
+  </div>
+
+  <div id="athletes-section" style="display:none;">
+    <div id="athletes-list">
+      <h2 style="color: #ffc371;">🎾 Υπάρχοντες Αθλητές</h2>
+      <ul id="playersDisplay"></ul>
+    </div>
+
+    <form id="athleteForm">
+      <h2 style="color: #ffc371;">➕ Νέος Αθλητής</h2>
+      <input type="text" name="firstName" placeholder="Όνομα" required>
+      <input type="text" name="lastName" placeholder="Επίθετο" required>
+      <input type="number" name="age" placeholder="Ηλικία" min="5" max="100">
+      <input type="number" name="height" placeholder="Ύψος (cm)" min="100" max="250">
+      <input type="text" name="origin" placeholder="Χώρα">
+      <select name="gender" required>
+        <option value="" disabled selected>Φύλο</option>
+        <option value="Άντρας">Άντρας</option>
+        <option value="Γυναίκα">Γυναίκα</option>
+      </select>
+      <select name="handedness" required>
+        <option value="" disabled selected>Χειρισμός Ρακέτας</option>
+        <option value="Δεξιόχειρας">Δεξιόχειρας</option>
+        <option value="Αριστερόχειρας">Αριστερόχειρας</option>
+      </select>
+      <select name="backhand" required>
+        <option value="" disabled selected>Backhand</option>
+        <option value="one-handed">One-handed</option>
+        <option value="two-handed">Two-handed</option>
+      </select>
+      <!-- Νέο πεδίο για φωτογραφία -->
+      <input type="file" name="photo" accept="image/*">
+      <button type="submit">Προσθήκη Αθλητή</button>
+    </form>
+  </div>
+
+  <div id="savedMatchesSection">
+    <h2 style="color: #ffc371;">📋 Προηγούμενοι Αγώνες</h2>
+    <div id="savedMatchesList"></div>
+  </div>
+
+  <div id="notification" class="notification"></div>
+
+  <script>
+    let editingAthleteIndex = null;
+
+    function showNotification(message, type = 'success') {
+      const notification = document.getElementById('notification');
+      notification.textContent = message;
+      notification.className = 'notification show';
+      if (type === 'error') notification.classList.add('error');
+      else if (type === 'info') notification.classList.add('info');
+      setTimeout(() => { notification.classList.remove('show'); }, 3500);
+    }
+
+    function toggleAthletesSection() {
+      const section = document.getElementById('athletes-section');
+      if(section.style.display === 'none' || section.style.display === '') {
+        section.style.display = 'flex';
+        loadAthletes();
+      } else {
+        section.style.display = 'none';
+      }
+    }
+
+ // --- IndexedDB Setup ---
+  const dbRequest = indexedDB.open('AthletePhotosDB', 1);
+
+  dbRequest.onupgradeneeded = (event) => {
+    const db = event.target.result;
+    if (!db.objectStoreNames.contains('photos')) {
+      db.createObjectStore('photos', { keyPath: 'id' });
+    }
+  };
+
+  dbRequest.onerror = (event) => {
+    console.error('IndexedDB error:', event.target.error);
+  };
+
+  dbRequest.onsuccess = (event) => {
+    console.log('IndexedDB έτοιμη!');
+  };
+
+  function savePhoto(id, file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const db = dbRequest.result;
+      const tx = db.transaction('photos', 'readwrite');
+      const store = tx.objectStore('photos');
+      store.put({ id: id, photo: e.target.result });
+      tx.oncomplete = () => console.log('Φωτογραφία αποθηκεύτηκε με ID:', id);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function loadPhoto(id, callback) {
+    const db = dbRequest.result;
+    const tx = db.transaction('photos', 'readonly');
+    const store = tx.objectStore('photos');
+    const request = store.get(id);
+
+    request.onsuccess = () => {
+      if (request.result) callback(request.result.photo);
+      else callback(null);
+    };
+  }
+
+  function deletePhoto(id) {
+    const db = dbRequest.result;
+    const tx = db.transaction('photos', 'readwrite');
+    const store = tx.objectStore('photos');
+    store.delete(id);
+    tx.oncomplete = () => console.log('Φωτογραφία διαγράφηκε με ID:', id);
+  }
+
+  
+
+  // --- Load Athletes ---
+  function loadAthletes() {
+    const playersDisplay = document.getElementById('playersDisplay');
+    playersDisplay.innerHTML = '';
+    let athletes = JSON.parse(localStorage.getItem('tennisAthletes')) || [];
+    if (athletes.length === 0) {
+      playersDisplay.innerHTML = '<li>Δεν υπάρχουν αποθηκευμένοι αθλητές.</li>';
+      return;
+    }
+
+    athletes.forEach((athlete, index) => {
+      const li = document.createElement('li');
+      const nameSpan = document.createElement('span');
+
+      const athleteId = athlete.firstName + '_' + athlete.lastName;
+
+      // Φόρτωση φωτογραφίας από IndexedDB
+      loadPhoto(athleteId, (photo) => {
+        if (photo) {
+          const img = document.createElement('img');
+          img.src = photo;
+          li.insertBefore(img, li.firstChild);
+        }
+      });
+
+      nameSpan.textContent = `${athlete.firstName} ${athlete.lastName}`;
+      li.appendChild(nameSpan);
+
+      const buttonsDiv = document.createElement('div');
+      buttonsDiv.style.display = 'flex';
+      buttonsDiv.style.gap = '10px';
+
+      const editBtn = document.createElement('button');
+      editBtn.textContent = '✏️';
+      editBtn.classList.add('edit-btn');
+      editBtn.onclick = () => editAthlete(index);
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.textContent = '🗑️';
+      deleteBtn.classList.add('delete-btn');
+      deleteBtn.onclick = () => deleteAthlete(index);
+
+      const statsBtn = document.createElement('button');
+      statsBtn.textContent = '📊';
+      statsBtn.classList.add('stats-btn');   
+      statsBtn.onclick = () => viewStats(index);
+
+      buttonsDiv.appendChild(editBtn);
+      buttonsDiv.appendChild(deleteBtn);
+      buttonsDiv.appendChild(statsBtn);
+      li.appendChild(buttonsDiv);
+
+      playersDisplay.appendChild(li);
+    });
+  }
+
+  // --- Edit Athlete ---
+  function editAthlete(index) {
+    const athletes = JSON.parse(localStorage.getItem('tennisAthletes')) || [];
+    const athlete = athletes[index];
+    if (!athlete) return;
+
+    const form = document.getElementById('athleteForm');
+    form.firstName.value = athlete.firstName || '';
+    form.lastName.value = athlete.lastName || '';
+    form.age.value = athlete.age || '';
+    form.height.value = athlete.height || '';
+    form.origin.value = athlete.origin || '';
+    form.gender.value = athlete.gender || '';
+    form.handedness.value = athlete.handedness || '';
+    form.backhand.value = athlete.backhand || '';
+    form.querySelector('button[type="submit"]').textContent = 'Αποθήκευση Αλλαγών';
+
+    editingAthleteIndex = index;
+
+    // Προφόρτωση φωτογραφίας στη φόρμα (προαιρετικό)
+    const athleteId = athlete.firstName + '_' + athlete.lastName;
+    loadPhoto(athleteId, (photo) => {
+      if (photo) {
+        // Προαιρετική εμφάνιση preview φωτογραφίας
+        console.log('Φόρτωση φωτογραφίας για preview:', athleteId);
+      }
+    });
+  }
+
+  // --- Delete Athlete ---
+  function deleteAthlete(index) {
+    const athletes = JSON.parse(localStorage.getItem('tennisAthletes')) || [];
+    const athlete = athletes[index];
+    if (!athlete) return;
+
+    const athleteId = athlete.firstName + '_' + athlete.lastName;
+
+    // Διαγραφή φωτογραφίας από IndexedDB
+    deletePhoto(athleteId);
+
+    // Διαγραφή από localStorage
+    athletes.splice(index, 1);
+    localStorage.setItem('tennisAthletes', JSON.stringify(athletes));
+
+    showNotification('Ο αθλητής διαγράφηκε!', 'info');
+    loadAthletes();
+  }
+
+  // --- Athlete Form Submit ---
+  document.getElementById('athleteForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+    const formData = new FormData(this);
+    const athleteId = formData.get('firstName') + '_' + formData.get('lastName'); // μοναδικό ID
+    const file = formData.get('photo');
+
+    const updatedAthlete = {
+      firstName: formData.get('firstName'),
+      lastName: formData.get('lastName'),
+      age: formData.get('age'),
+      height: formData.get('height'),
+      origin: formData.get('origin'),
+      gender: formData.get('gender'),
+      handedness: formData.get('handedness'),
+      backhand: formData.get('backhand')
+    };
+
+    let athletes = JSON.parse(localStorage.getItem('tennisAthletes')) || [];
+    if (editingAthleteIndex !== null) {
+      athletes[editingAthleteIndex] = updatedAthlete;
+      editingAthleteIndex = null;
+      document.querySelector('#athleteForm button[type="submit"]').textContent = 'Προσθήκη Αθλητή';
+      showNotification('Οι αλλαγές αποθηκεύτηκαν!');
+    } else {
+      athletes.push(updatedAthlete);
+      showNotification('Ο αθλητής προστέθηκε επιτυχώς!');
+    }
+
+    localStorage.setItem('tennisAthletes', JSON.stringify(athletes));
+
+    // Αποθήκευση φωτογραφίας μόνο αν υπάρχει αρχείο
+    if (file && file.size > 0) savePhoto(athleteId, file);
+
+    this.reset();
+    loadAthletes();
+  });
+
+function loadSavedMatches() {
+  const section = document.getElementById('savedMatchesSection');
+  const container = document.getElementById('savedMatchesList');
+  container.innerHTML = '';
+  let savedMatches = JSON.parse(localStorage.getItem('savedMatches')) || [];
+
+  if (savedMatches.length === 0) {
+    container.innerHTML = '<p>Δεν υπάρχουν αποθηκευμένοι αγώνες.</p>';
+    section.style.display = 'block';
+    return;
+  }
+
+  savedMatches.forEach((match, index) => {
+    const matchDiv = document.createElement('div');
+    matchDiv.classList.add('match-box');
+    matchDiv.style.backgroundColor = '#2c2c2c';
+    matchDiv.style.marginBottom = '15px';
+    matchDiv.style.padding = '15px';
+    matchDiv.style.borderRadius = '15px';
+    matchDiv.style.boxShadow = '0 4px 8px rgba(0,0,0,0.3)';
+    matchDiv.style.position = 'relative';
+
+    // κουμπί διαγραφής
+    const delBtn = document.createElement('button');
+    delBtn.textContent = '🗑️ Διαγραφή';
+    delBtn.classList.add('match-delete-btn');
+    delBtn.onclick = () => deleteMatch(index);
+    matchDiv.appendChild(delBtn);
+
+    // Ονόματα παικτών με uppercase και default τιμές
+    const player1Name = match.player1 && match.player1.lastName 
+      ? `${(match.player1.firstName || 'Player1').toUpperCase()} ${(match.player1.lastName || '').toUpperCase()}` 
+      : 'PLAYER1';
+    const player2Name = match.player2 && match.player2.lastName 
+      ? `${(match.player2.firstName || 'Player2').toUpperCase()} ${(match.player2.lastName || '').toUpperCase()}` 
+      : 'PLAYER2';
+
+    // Τίτλος αγώνα
+    const title = document.createElement('h3');
+    title.style.color = '#ffc371';
+    title.textContent = `Αγώνας ${index + 1}: ${player1Name} vs ${player2Name}`;
+
+    // Σκορ
+    const score = document.createElement('p');
+    score.textContent = `Σκορ: ${match.score || 'N/A'}`;
+
+    // Ημερομηνία & ώρα
+    const date = document.createElement('p');
+    if (match.date) {
+      const d = new Date(match.date);
+      const day = d.getDate().toString().padStart(2,'0');
+      const month = (d.getMonth()+1).toString().padStart(2,'0');
+      const year = d.getFullYear();
+      const hours = d.getHours().toString().padStart(2,'0');
+      const minutes = d.getMinutes().toString().padStart(2,'0');
+      date.textContent = `Ημερομηνία: ${day}/${month}/${year} ${hours}:${minutes}`;
+    } else {
+      date.textContent = 'Ημερομηνία: N/A';
+    }
+
+    // Κουμπί μετάβασης στον αγώνα
+    const goBtn = document.createElement('button');
+    goBtn.textContent = '➡️ Μετάβαση στον Αγώνα';
+    goBtn.classList.add('menu-button');
+    goBtn.style.marginTop = '10px';
+    goBtn.onclick = () => {
+      localStorage.setItem('currentMatch', JSON.stringify(match));
+      window.location.href = 'match.html'; // ή το όνομα της σελίδας αγώνα
+    };
+
+    // Προσθήκη στοιχείων στο κουτάκι
+    matchDiv.appendChild(title);
+    matchDiv.appendChild(score);
+    matchDiv.appendChild(date);
+    matchDiv.appendChild(goBtn);
+
+    container.appendChild(matchDiv);
+  });
+
+  section.style.display = 'block';
+}
+
+
+function deleteMatch(index) {
+  const modal = document.getElementById('confirmModal');
+  modal.style.display = 'flex';
+
+  const confirmYes = document.getElementById('confirmYes');
+  const confirmNo = document.getElementById('confirmNo');
+
+  // Απομάκρυνση προηγούμενων listeners για να μην εκτελούνται πολλαπλές φορές
+  confirmYes.replaceWith(confirmYes.cloneNode(true));
+  confirmNo.replaceWith(confirmNo.cloneNode(true));
+
+  const newYes = document.getElementById('confirmYes');
+  const newNo = document.getElementById('confirmNo');
+
+  newYes.onclick = () => {
+    let savedMatches = JSON.parse(localStorage.getItem('savedMatches')) || [];
+    savedMatches.splice(index, 1);
+    localStorage.setItem('savedMatches', JSON.stringify(savedMatches));
+    modal.style.display = 'none';
+    showNotification('Ο αγώνας διαγράφηκε επιτυχώς!', 'info');
+    loadSavedMatches();
+  };
+
+  newNo.onclick = () => {
+    modal.style.display = 'none';
+  };
+}
+
+  </script>
+
+  <div id="notification" class="notification"></div>
+</body>
+</html>
+

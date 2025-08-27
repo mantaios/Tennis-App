@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8" />
+  <title>Στατιστικά Αγώνα</title>
+  <style>
+/* --- Body & γενικό layout --- */
+body {
+    background-color: #f5f5f5;  
+    color: #111;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 20px;
+}
+
+/* --- Σύνδεσμος επιστροφής --- */
+.back-link {
+    display: inline-block;
+    margin-bottom: 20px;
+    color: #000;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 1rem;
+    transition: color 0.2s;
+}
+.back-link:hover {
+    color: #e91e63;
+}
+
+/* --- Player Header --- */
+.players-header {
+    display: flex;
+    justify-content: center; /* κεντράρουμε ολόκληρο το header */
+    align-items: flex-start; /* ευθυγράμμιση στην κορυφή */
+    gap: 70px;               /* απόσταση μεταξύ των δύο παικτών (μικρότερη) */
+    margin: 0 auto 25px;
+}
+
+.player {
+    display: flex;
+    flex-direction: column; /* εικόνα πάνω, όνομα κάτω */
+    align-items: center;    /* στο κέντρο κάθετα */
+    width: 120px;           /* πλάτος container */
+}
+
+.player img {
+    width: 100px;
+    height: 100px;
+    border-radius: 12px;
+    background-color: #ddd;
+    object-fit: cover;
+    margin-bottom: 8px;
+}
+
+.player-name {
+    text-align: center;
+    font-weight: bold;
+    font-size: 1rem;
+    color: #222;
+}
+
+
+
+
+.stats-title {
+    text-align: center;
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #333;
+}
+
+/* --- Container στατιστικών --- */
+.stats-container {
+    max-width: 900px;
+    margin: auto;
+    background: #fff;
+    padding: 25px 30px;
+    border-radius: 15px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+
+/* --- Σειρές στατιστικών --- */
+.stat-row {
+    margin-bottom: 26px;
+}
+.stat-label {
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 6px;
+    color: #111;
+    font-size: 15px;
+}
+
+/* --- Bars --- */
+.bar-wrapper {
+    display: grid;
+    grid-template-columns: 80px 1fr 80px;
+    align-items: center;
+    gap: 8px;
+}
+.stat-value {
+    font-size: 0.95rem;
+    font-weight: bold;
+    text-align: center;
+}
+.bar {
+    position: relative;
+    height: 22px;
+    background: #eee;
+    border-radius: 12px;
+    overflow: hidden;
+}
+.bar-fill-left {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    background: #000;       
+    border-radius: 12px 0 0 12px;
+}
+.bar-fill-right {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background: #e91e63;     
+    border-radius: 0 12px 12px 0;
+}
+
+/* --- Game History --- */
+.game-history {
+    margin: 30px auto;
+    padding: 20px;
+    border-radius: 12px;
+    background: #2c2c2c;       
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    max-width: 850px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+.game-history h3 {
+    color: #e91e63;
+    text-align: center;
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+}
+.set-history {
+    margin-bottom: 18px;
+    padding: 12px 16px;
+    border-left: 4px solid #ffc107;  
+    background-color: #3a3a3a;
+    border-radius: 8px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.set-history:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 10px #eb2106;
+}
+.set-history strong {
+    display: block;
+    margin-bottom: 10px;
+    font-size: 1.1em;
+    color: #fff;
+}
+.games-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.game-score-history {
+    flex: 0 0 auto;
+    margin: 3px;
+    padding: 6px 12px;
+    background: #e91e63;      
+    border-radius: 6px;
+    font-weight: bold;
+    color: #fff;
+    cursor: default;
+    font-size: 0.9em;
+    transition: transform 0.2s, background 0.2s;
+}
+.game-score-history:hover {
+    transform: scale(1.05);
+    background: #ffc107;     
+    color: #000;
+}
+
+/* --- Responsive --- */
+@media (max-width: 768px) {
+    .stats-container { padding: 20px; }
+    .game-history { padding: 15px; }
+    .game-score-history { font-size: 0.85em; padding: 5px 10px; }
+    .players-header { flex-direction: column; gap: 15px; }
+}
+@media (max-width: 480px) {
+    .game-score-history { flex: 1 1 100%; text-align: center; }
+}
+.top-buttons {
+    position: fixed;
+    top: 15px;
+    right: 20px;
+    display: flex;
+    gap: 10px;
+    z-index: 1000;
+}
+
+.top-buttons button {
+    font-size: 1.4rem;        /* μεγαλύτερα emoji */
+    padding: 6px 10px;
+    border: none;
+    border-radius: 50%;
+    background: #fff;          /* ταιριάζει με το layout */
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.top-buttons button:hover {
+    transform: scale(1.2);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+  </style>
+<body>
+<!-- Κουμπιά πάνω πάνω -->
+<!-- Κουμπιά πάνω δεξιά -->
+<div class="top-buttons">
+  <button id="saveBtn">💾</button>
+  <button id="editBtn">✏️</button>
+</div>
+<a href="index.html" class="back-link">← Πίσω</a>
+  <div class="stats-title">Στατιστικά Αγώνα</div>
+  </div>
+</div>
+
+<div class="stats-container">
+  <div id="stats-body"></div>
+</div>
+
+<div class="game-history-container">
+  <h3>Ιστορικό Game</h3>
+  <div id="gameHistory" class="game-history"></div>
+</div>
+
+<script>
+
+
+  // --- Player 2 ---
+ 
+
+
+
+
+
+
+// --- Υπόλοιπος κώδικας για stats, history και selects ---
+const statsCategories = [
+  { key: "Άσοι", label: "Aces" },
+  { key: "Νταμπλ φολτ", label: "Double Faults" },
+  { key: "Νικητές", label: "Winners" },
+  { key: "Ατομικά λάθη", label: "Unforced Errors" },
+  { key: "Ποσοστό 1ου σερβίς", label: "1st Serve Percentage", percent:true },
+  { key: "Return Winners", label: "Return Winners" },
+  { key: "Return Errors", label: "Return Errors" },
+  { key: "Πόντοι με σερβίς", label: "Service Points" },
+  { key: "Πόντοι χωρίς σερβίς", label: "Points Without Service" },
+  { key: 'Κερδισμένοι Πόντοι', label: 'Points Won' },
+];
+
+function getStats() {
+  return {
+    player1: JSON.parse(localStorage.getItem("statsPlayer1")) || {},
+    player2: JSON.parse(localStorage.getItem("statsPlayer2")) || {}
+  };
+}
+function formatValue(value) { if (!value) return "0"; return value; }
+function extractPercent(value) { if(!value) return 0; if(typeof value==="number") return value; return 0; }
+function calcSplitBars(val1, val2, statKey) {
+    // Αν είναι Κερδισμένοι Πόντοι, υπολόγισε ως ποσοστό επί του συνολικού των δύο παικτών
+    if (statKey === 'Κερδισμένοι Πόντοι') {
+        const total = (val1 || 0) + (val2 || 0);
+        return total === 0 ? { p1pct: 50, p2pct: 50 } : { 
+            p1pct: Math.round((val1 / total) * 100), 
+            p2pct: Math.round((val2 / total) * 100) 
+        };
+    } else {
+        // Υφιστάμενος υπολογισμός
+        const total = (val1 || 0) + (val2 || 0);
+        return total === 0 ? { p1pct: 50, p2pct: 50 } : { 
+            p1pct: Math.round((val1 / total) * 100), 
+            p2pct: Math.round((val2 / total) * 100) 
+        };
+    }
+}
+
+function renderStats() {
+    const { player1, player2 } = getStats();
+    const container = document.getElementById("stats-body");
+    container.innerHTML = "";
+
+    statsCategories.forEach(stat => {
+        let p1Text = formatValue(player1[stat.key]);
+        let p2Text = formatValue(player2[stat.key]);
+
+        const { p1pct, p2pct } = calcSplitBars(
+            extractPercent(player1[stat.key]),
+            extractPercent(player2[stat.key]),
+            stat.key // Προσθήκη για ειδικό χειρισμό "Κερδισμένοι Πόντοι"
+        );
+
+        // Αν είναι Κερδισμένοι Πόντοι, εμφάνισε ποσοστά αντί για αριθμούς
+        let leftValueText = p1Text;
+        let rightValueText = p2Text;
+        if (stat.key === 'Κερδισμένοι Πόντοι') {
+            leftValueText = p1pct + "%";
+            rightValueText = p2pct + "%";
+        }
+
+        const row = document.createElement("div");
+        row.className = "stat-row";
+
+        const label = document.createElement("div");
+        label.className = "stat-label";
+        label.textContent = stat.label;
+
+        const wrapper = document.createElement("div");
+        wrapper.className = "bar-wrapper";
+
+        const leftValue = document.createElement("div");
+        leftValue.className = "stat-value";
+        leftValue.textContent = leftValueText;
+
+        const bar = document.createElement("div");
+        bar.className = "bar";
+
+        const fillLeft = document.createElement("div");
+        fillLeft.className = "bar-fill-left";
+        fillLeft.style.width = p1pct + "%";
+
+        const fillRight = document.createElement("div");
+        fillRight.className = "bar-fill-right";
+        fillRight.style.width = p2pct + "%";
+
+        bar.appendChild(fillLeft);
+        bar.appendChild(fillRight);
+
+        const rightValue = document.createElement("div");
+        rightValue.className = "stat-value";
+        rightValue.textContent = rightValueText;
+
+        wrapper.appendChild(leftValue);
+        wrapper.appendChild(bar);
+        wrapper.appendChild(rightValue);
+
+        row.appendChild(label);
+        row.appendChild(wrapper);
+
+        container.appendChild(row);
+    });
+}
+
+
+function renderGameHistory(matchData) {
+  const container = document.getElementById('gameHistory'); container.innerHTML='';
+  matchData.gameHistory.forEach((setGames,setIndex)=>{
+    const setDiv=document.createElement('div'); setDiv.className='set-history';
+    const setTitle=document.createElement('strong'); setTitle.textContent=`Set ${setIndex+1}:`;
+    setDiv.appendChild(setTitle);
+    const gamesContainer=document.createElement('div'); gamesContainer.className='games-container';
+    setGames.forEach((gameScores,gameIndex)=>{
+      const gameDiv=document.createElement('div'); gameDiv.className='game-score-history';
+      gameDiv.textContent=`Game ${gameIndex+1}: ${gameScores.join(', ')}`;
+      gamesContainer.appendChild(gameDiv);
+    });
+    setDiv.appendChild(gamesContainer); container.appendChild(setDiv);
+  });
+}
+
+
+
+
+
+
+
+
+
+
+
+document.addEventListener("DOMContentLoaded", async () => {
+  // 1. Render stats πρώτα
+  renderStats();
+
+  const matchDataStr = localStorage.getItem('currentMatch');
+  const players = JSON.parse(localStorage.getItem('tennisAthletes')) || [];
+
+  if (matchDataStr) {
+    const matchData = JSON.parse(matchDataStr);
+
+    ['player1', 'player2'].forEach(playerKey => {
+      const playerInfo = matchData[playerKey];
+    
+    });
+
+    if (!matchData.gameHistory) matchData.gameHistory = [[]];
+    renderGameHistory(matchData);
+  }
+
+  // 4. Populate selects χωρίς να σβήνουμε όνομα/φωτογραφία
+  populatePlayerSelect("player1-select","player1","player1-name");
+  populatePlayerSelect("player2-select","player2","player2-name");
+});
+
+</script>
+</body>
+
+</html>
